@@ -20,6 +20,7 @@
 2. Create your custom config filse like for realsense dataset and change them:
     - map_fusion/config [1]
     - VINS-Mono/config [2]
+    - afm/scripts/experiments/afm_unet_rs.yaml
 3. Run
     - roslaunch vins_estimator <your>.launch 
     - roslaunch map_fusion <your>.launch
