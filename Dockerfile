@@ -1,6 +1,6 @@
 #|||||||||||||||||||||
 #https://github.com/linukc/2D-3D-pose-tracking - репозиторий идентичный основному 2D-3D, только там исправлена https://github.com/cherubicXN/afm_cvpr2019/issues/17#issuecomment-590211288 
-docker build -t 2d-3d . --build-arg NUM_THREADS=4
+#docker build -t 2d-3d . --build-arg NUM_THREADS=4
 #|||||||||||||||||||||
 
 
