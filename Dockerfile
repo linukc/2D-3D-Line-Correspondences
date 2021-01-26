@@ -1,10 +1,6 @@
 #|||||||||||||||||||||
-#---------------------
-#TO DO ...
-#сделать волюм репозиториев и убрать их гит клон
-#ДОБАВИТЬ WORKDIR HOME И УБРАТЬ ПО МАКСИМОМУ CD 
-#разделять загрузки и установки в разные команды а то при ошибках установки все еще раз качается
-#---------------------
+#https://github.com/linukc/2D-3D-pose-tracking - репозиторий идентичный основному 2D-3D, только там исправлена https://github.com/cherubicXN/afm_cvpr2019/issues/17#issuecomment-590211288 
+docker build -t 2d-3d . --build-arg NUM_THREADS=4
 #|||||||||||||||||||||
 
 
@@ -14,6 +10,7 @@ FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04 as build
 ARG APT_INSTALL="apt-get install -y --no-install-recommends"
 ARG PIP_INSTALL="python -m pip --no-cache-dir install --upgrade --user"
 ARG GIT_CLONE="git clone --depth 10"
+ENV HOME /root
 
 RUN apt-get update && $APT_INSTALL \
          build-essential \
@@ -30,11 +27,13 @@ RUN $PIP_INSTALL wheel \
 
 #-----Pytorch with cuda 10.1-----
 RUN $PIP_INSTALL torch==1.4.0 torchvision==0.5.0
+---------------------------------
 
-RUN cd / && mkdir -p catkin_ws/src && cd catkin_ws/ && \
-         $GIT_CLONE --single-branch --branch docker https://github.com/linukc/2D-3D-pose-tracking src
+WORKDIR $HOME
+$GIT_CLONE --single-branch --branch docker https://github.com/linukc/2D-3D-pose-tracking
 
-RUN cd / && cd catkin_ws/src/afm/scripts/lib && make -j$(nproc) && ls afm_op -l         
+WORKDIR 2D-3D-pose-tracking/afm/scripts/lib
+RUN make -j$(nproc)         
 
 
 #---------------------PRODUCTION--------------------
@@ -43,6 +42,7 @@ FROM nvidia/cuda:10.1-base-ubuntu18.04
 ARG APT_INSTALL="apt-get install -y --no-install-recommends"
 ARG PIP_INSTALL="python -m pip --no-cache-dir install --upgrade"
 ARG GIT_CLONE="git clone --depth 10"
+ENV HOME /root
 
 RUN apt-get update && $APT_INSTALL \
          build-essential \
@@ -55,37 +55,30 @@ RUN apt-get update && $APT_INSTALL \
          python2.7 \
          python-dev \
          python-pip \
-         python-setuptools
-
-COPY --from=build /root/.local /root/.local
-ENV PATH=/root/.local/bin:$PATH
-
-RUN $PIP_INSTALL yacs \
+         python-setuptools \
          yacs \
          matplotlib \
          tqdm \
          scikit-image
 
+# copy pytorch
+COPY --from=build /root/.local /root/.local
+ENV PATH=/root/.local/bin:$PATH
 
 RUN $PIP_INSTALL opencv-python-headless==3.4.3.18
 
+WORKDIR $HOME
 RUN wget https://github.com/opencv/opencv/archive/3.4.3.zip && \
          unzip 3.4.3.zip && \
          rm 3.4.3.zip && \
-         mv opencv-3.4.3 OpenCV && \
-         cd OpenCV && \
-         mkdir build && \
-         cd build && \
-         cmake \
-         -DWITH_QT=OFF \
-         -DBUILD_EXAMPLES=OFF .. && \
+         mv opencv-3.4.3 OpenCV
+
+WORKDIR OpenCV/build
+RUN cmake -DWITH_QT=OFF -DBUILD_EXAMPLES=OFF .. && \
          make -j$(nproc) && \
          make install && \
-         cd .. && \
-         cd .. && \
-         rm -rf OpenCV
 
-
+WORKDIR $HOME
 RUN apt-get update && $APT_INSTALL \
          libgoogle-glog-dev \
          libgflags-dev \
@@ -93,14 +86,13 @@ RUN apt-get update && $APT_INSTALL \
          libeigen3-dev \
          libsuitesparse-dev && \
          $GIT_CLONE https://ceres-solver.googlesource.com/ceres-solver && \
-         cd ceres-solver && \
-         mkdir build && cd build && \
-         cmake .. && \
+
+WORKDIR ceres-solver/build         
+RUN cmake .. && \
          make -j$(nproc) && \
-         make install && \
-         rm -rf ../../ceres-solver
+         make install
 
-
+WORKDIR $HOME
 ENV ROS_DISTRO melodic
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
@@ -126,7 +118,7 @@ RUN echo 'Etc/UTC' > /etc/timezone && \
          rospkg \
          empy
 
-#Нужно переносить в начало, а то проблемы с source
+#свап sh и bash для работы source
 RUN mv /bin/sh /bin/sh-old && \
          ln -s /bin/bash /bin/sh
 
@@ -135,17 +127,21 @@ RUN $APT_INSTALL ros-melodic-pcl-ros \
          python-tk && \
          source /opt/ros/melodic/setup.bash && \
          rosdep init && \
-         sudo rosdep update && \
-         cd / && mkdir -p catkin_ws/src && cd catkin_ws/ && \
+         sudo rosdep update
+
+WORKDIR catkin_ws
+RUN mkdir src && \
          $GIT_CLONE --single-branch --branch docker https://github.com/linukc/2D-3D-pose-tracking src && \
          rm -rf src/VINS-Mono-config && \
-         $GIT_CLONE https://github.com/HKUST-Aerial-Robotics/VINS-Mono.git /tmp/VINS-Mono && \
-         mv /tmp/VINS-Mono src
+         $GIT_CLONE https://github.com/HKUST-Aerial-Robotics/VINS-Mono.git src && \
+         source /opt/ros/melodic/setup.bash && \
+         catkin_make -j$(nproc)
 
-RUN cd / && cd catkin_ws && source /opt/ros/melodic/setup.bash && \
-         catkin_make -j6
+COPY --from=build $HOME/2D-3D-pose-tracking/afm/scripts/lib/afm_op/CUDA.so src/afm/scripts/lib/afm_op/CUDA.so
+COPY --from=build $HOME/2D-3D-pose-tracking/afm/scripts/lib/squeeze/squeeze.so src/afm/scripts/lib/squeeze/squeeze.so
 
-COPY --from=build /catkin_ws/src/afm/scripts/lib/afm_op/CUDA.so /catkin_ws/src/afm/scripts/lib/afm_op/CUDA.so
-COPY --from=build /catkin_ws/src/afm/scripts/lib/squeeze/squeeze.so /catkin_ws/src/afm/scripts/lib/squeeze/squeeze.so
+WORKDIR $HOME
 
-RUN apt-get clean && apt-get autoremove && rm -rf /var/lib/apt/lists/* /tmp/*
+RUN apt-get clean && \
+         apt-get autoremove && \
+         rm -rf /var/lib/apt/lists/* /tmp/* $HOME/OpenCV $HOME/ceres-solver
