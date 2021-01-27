@@ -37,7 +37,7 @@ May be look for:
     https://www.vectornav.com/resources/imu-specifications
     [imu noize](https://docviewer.yandex.ru/view/1130000039377681/?page=3&*=UTJqeihfY%2Bux98hDF4mbnMkbDml7InVybCI6Imh0dHBzOi8vYXJ4aXYub3JnL3BkZi8xNjA4LjA3MDUzLnBkZiIsInRpdGxlIjoiMTYwOC4wNzA1My5wZGYiLCJub2lmcmFtZSI6dHJ1ZSwidWlkIjoiMTEzMDAwMDAzOTM3NzY4MSIsInRzIjoxNjExNTA2NTU3OTY1LCJ5dSI6IjY4NjA3OTU2MzE2MDYyNTQ1MjEiLCJzZXJwUGFyYW1zIjoibGFuZz1lbiZ0bT0xNjExNTA2NTQ5JnRsZD1ydSZuYW1lPTE2MDguMDcwNTMucGRmJnRleHQ9YWNjZWxlcm9tZXRlcittZWFzdXJlbWVudCtub2lzZStzdGFuZGFyZCtkZXZpYXRpb24mdXJsPWh0dHBzJTNBLy9hcnhpdi5vcmcvcGRmLzE2MDguMDcwNTMucGRmJmxyPTEwODQ5Jm1pbWU9cGRmJmwxMG49cnUmc2lnbj03Y2M2MDM0NTVlY2JlYjE3NmE3YmQ2NzJkNTlkNjU5MSZrZXlubz0wIn0%3D&lang=en)
 
-2. Constant speed https://github.com/HKUST-Aerial-Robotics/VINS-Mono/issues/155#issue-295492833
+2. Constant speed https://github.com/HKUST-Aerial-Robotics/VINS-Mono/issues/155#issue-295492833 (#issuecomment-400685206) -> VinsFusion
 3. td https://github.com/HKUST-Aerial-Robotics/VINS-Mono/issues/232
     
     
