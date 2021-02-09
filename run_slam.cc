@@ -218,15 +218,24 @@ class tracking {
 
             tf::Transform transform_tf(tf_rotation_matrix, tf_translation_vector);
 
-            tf::Matrix3x3 rot_open_to_ros (0, 0, 1,
-                                  -1, 0, 0,
-                                   0,-1, 0);
+            tf::Matrix3x3 rot_open_to_ros (0, 0, -1,
+                                           1, 0, 0,
+                                           0, 1, 0);
 
             tf::Transform transformA(rot_open_to_ros, tf::Vector3(0.0, 0.0, 0.0));
             tf::Transform transformB(rot_open_to_ros.inverse(), tf::Vector3(0.0, 0.0, 0.0));
-            tf::Transform transform_6_track(tf::Quaternion(-0.47545, -0.50846, 0.51558, 0.499572).normalize(), tf::Vector3(20.84356, 0.24199, -0.519));
 
-            transform_tf = transformA * transform_tf * transformB * transform_6_track;
+            //tf::Matrix3x3 rot;
+            //rot.setRotation(tf::Quaternion(-0.9517146, -1.017791, 1.032043, 1));
+            //tf::Transform transformC(rot, tf::Vector3(0.0, 0.0, 0.0));
+            //tf::Transform transformD(rot.inverse(), tf::Vector3(0.0, 0.0, 0.0));
+
+            //tf::Transform transform_6_track(rot.transpose(), tf::Vector3(0.0, 0.0, 0.0));
+            //std::cout << tf::Quaternion(-0.47545, -0.50846, 0.51558, 0.499572).normalize() << std::endl;
+            //tf::Transform transform_6_track(rot_6track.inverse(), -(rot_6track.inverse()*trans_6track));
+            //tf::Transform transform_6_track(rot_6track, trans_6track);
+            transform_tf = transformA * transform_tf * transformB;
+            //transform_tf = transformC * transform_tf * transformD;
             // setting odometry
             nav_msgs::Odometry msg_odom;
             msg_odom.header = header;
@@ -236,9 +245,9 @@ class tracking {
             msg_odom.pose.pose.orientation.y = transform_tf.getRotation().getY();
             msg_odom.pose.pose.orientation.z = transform_tf.getRotation().getZ();
             msg_odom.pose.pose.orientation.w = transform_tf.getRotation().getW();
-            msg_odom.pose.pose.position.x = transform_tf.getOrigin().getX();
-            msg_odom.pose.pose.position.y = transform_tf.getOrigin().getY();
-            msg_odom.pose.pose.position.z = transform_tf.getOrigin().getZ();
+            msg_odom.pose.pose.position.x = transform_tf.getOrigin().getX() + 20.84356;
+            msg_odom.pose.pose.position.y = transform_tf.getOrigin().getY() + 0.24199;
+            msg_odom.pose.pose.position.z = transform_tf.getOrigin().getZ() - 0.519;
             odom_pub.publish(msg_odom);
 
             // publishing path
